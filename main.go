@@ -29,6 +29,10 @@ func handlerLogin(s *state, cmd command) error {
 	return nil
 }
 
+type commands struct {
+	registeredCommands map[string]func(*state, command) error
+}
+
 func main() {
 	cfg, err := config.Read()
 	if err != nil {
