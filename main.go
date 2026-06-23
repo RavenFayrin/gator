@@ -33,21 +33,31 @@ type commands struct {
 	registeredCommands map[string]func(*state, command) error
 }
 
+func (c *commands) run(s *state, cmd command) error {
+	f_cmd, ok := c.registeredCommands[cmd.name]
+	if ok {
+		return f_cmd(s, cmd)
+	} else {
+		return errors.New("ERROR: Command not found")
+	}
+}
+
+func (c *commands) register(name string, f func(*state, command) error) {
+	c.registeredCommands[name] = f
+}
+
 func main() {
 	cfg, err := config.Read()
 	if err != nil {
 		log.Fatalf("error reading config: %v", err)
 	}
-	fmt.Printf("Read config: %+v\n", cfg)
 
-	err = cfg.SetUser("lydia")
-	if err != nil {
-		log.Fatalf("couldn't set current user: %v", err)
+	s := &state{
+		cfg: &cfg
 	}
 
-	cfg, err = config.Read()
-	if err != nil {
-		log.Fatalf("error reading config: %v", err)
+	cmds := commands{
+		registeredCommands: make(map[string]func(*state, command) error),
 	}
-	fmt.Printf("Read config again: %+v\n", cfg)
+	
 }
