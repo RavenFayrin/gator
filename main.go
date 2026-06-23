@@ -59,5 +59,5 @@ func main() {
 	cmds := commands{
 		registeredCommands: make(map[string]func(*state, command) error),
 	}
-	
+	c.register("handlerLogin", handlerLogin(s, cmd))
 }
