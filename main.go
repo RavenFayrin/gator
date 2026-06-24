@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 
 	"main/internal/config"
 )
@@ -53,11 +54,23 @@ func main() {
 	}
 
 	s := &state{
-		cfg: &cfg
+		cfg: &cfg,
 	}
 
 	cmds := commands{
 		registeredCommands: make(map[string]func(*state, command) error),
 	}
-	c.register("handlerLogin", handlerLogin(s, cmd))
+	cmds.register("login", handlerLogin)
+	args := os.Args
+	if len(args) < 2 {
+		log.Fatal("ERROR")
+	}
+	cmd := command{
+		name: args[1],
+		args: args[2:],
+	}
+	err = cmds.run(s, cmd)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
