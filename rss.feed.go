@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"encoding/xml"
-	"fmt"
 	"html"
 	"io"
 	"net/http"
+	"time"
 )
 
 type RSSFeed struct {
@@ -26,29 +26,30 @@ type RSSItem struct {
 }
 
 func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
+	httpClient := http.Client{
+		Timeout: 10 * time.Second,
+	}
 	req, err := http.NewRequestWithContext(ctx, "GET", feedURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("could not reach URL: %v", err)
+		return nil, err
 	}
 
 	req.Header.Set("User-Agent", "gator")
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("could not get respones: %v", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	dat, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("could not read body: %v", err)
+		return nil, err
 	}
 
-	rssFeed := RSSFeed{}
-
-	err = xml.Unmarshal(body, &rssFeed)
+	var rssFeed RSSFeed
+	err = xml.Unmarshal(dat, &rssFeed)
 	if err != nil {
-		return nil, fmt.Errorf("could not read body: %v", err)
+		return nil, err
 	}
 
 	rssFeed.Channel.Title = html.UnescapeString(rssFeed.Channel.Title)
