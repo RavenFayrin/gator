@@ -19,4 +19,4 @@ INNER JOIN users
 -- name: GetFeedByUrl :one
 SELECT *
 FROM feeds
-WHERE url = $1
+WHERE url = $1;
