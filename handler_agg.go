@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"main/internal/database"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 func handlerAgg(s *state, cmd command) error {
@@ -50,7 +54,31 @@ func scrapeFeed(db *database.Queries, feed database.Feed) {
 		return
 	}
 	for _, item := range feedData.Channel.Item {
-		fmt.Printf("Found post: %s\n", item.Title)
+		_, err := db.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          uuid.New(),
+			CreatedAt:   time.Now().UTC(),
+			UpdatedAt:   time.Now().UTC(),
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: sql.NullString{String: item.Description, Valid: true},
+			PublishedAt: timeTranslator(item.PubDate),
+			FeedID:      feed.ID,
+		})
+		if err != nil {
+			if pgErr, ok := err.(*pq.Error); ok && pgErr.Code == "23505" {
+				continue
+			}
+			log.Printf("Could not create post: %v", err)
+		}
 	}
 	log.Printf("Feed %s collected, %v posts found", feed.Name, len(feedData.Channel.Item))
+}
+
+func timeTranslator(stringtime string) sql.NullTime {
+	t, err := time.Parse(time.RFC1123Z, stringtime)
+	if err != nil {
+		log.Printf("Time parsing error: %v", err)
+		return sql.NullTime{Valid: false}
+	}
+	return sql.NullTime{Time: t, Valid: true}
 }
