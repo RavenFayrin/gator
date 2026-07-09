@@ -33,6 +33,8 @@ func handlerBrowse(s *state, cmd command, user database.User) error {
 		fmt.Println(post.PublishedAt.Time)
 		fmt.Println("")
 		fmt.Println(post.Description.String)
+		fmt.Println("")
+		fmt.Println(post.Url)
 		fmt.Println("----------------------------------")
 	}
 
